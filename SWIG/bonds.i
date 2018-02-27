@@ -37,12 +37,14 @@
 using QuantLib::Bond;
 using QuantLib::ZeroCouponBond;
 using QuantLib::FixedRateBond;
+using QuantLib::AmortizingFixedRateBond;
 using QuantLib::FloatingRateBond;
 using QuantLib::DiscountingBondEngine;
 
 typedef boost::shared_ptr<Instrument> BondPtr;
 typedef boost::shared_ptr<Instrument> ZeroCouponBondPtr;
 typedef boost::shared_ptr<Instrument> FixedRateBondPtr;
+typedef boost::shared_ptr<Instrument> AmortizingFixedRateBondPtr;
 typedef boost::shared_ptr<Instrument> FloatingRateBondPtr;
 typedef boost::shared_ptr<PricingEngine> DiscountingBondEnginePtr;
 %}
@@ -255,19 +257,63 @@ class FixedRateBondPtr : public BondPtr {
               const Calendar& exCouponCalendar = Calendar(),
               BusinessDayConvention exCouponConvention = Unadjusted,
               bool exCouponEndOfMonth = false) {
-	       return new FixedRateBondPtr(
-		      new FixedRateBond(settlementDays, faceAmount,
-		                  schedule, coupons, paymentConvention,
-		                  redemption, issueDate, paymentCalendar,
-		                  exCouponPeriod, exCouponCalendar,
-		                  exCouponConvention, exCouponEndOfMonth));
-		}
+         return new FixedRateBondPtr(
+          new FixedRateBond(settlementDays, faceAmount,
+                      schedule, coupons, paymentConvention,
+                      redemption, issueDate, paymentCalendar,
+                      exCouponPeriod, exCouponCalendar,
+                      exCouponConvention, exCouponEndOfMonth));
+        }
         Frequency frequency() const {
             return boost::dynamic_pointer_cast<FixedRateBond>(*self)
                 ->frequency();
         }
         DayCounter dayCounter() const {
             return boost::dynamic_pointer_cast<FixedRateBond>(*self)
+                ->dayCounter();
+        }
+    }
+};
+
+%rename(AmortizingFixedRateBond) AmortizingFixedRateBondPtr;
+class AmortizingFixedRateBondPtr: public BondPtr {
+  public:
+    %extend {
+        AmortizingFixedRateBondPtr(
+                          Natural settlementDays,
+                          const std::vector<Real>& notionals,
+                          const Schedule& schedule,
+                          const std::vector<Rate>& coupons,
+                          const DayCounter& accrualDayCounter,
+                          BusinessDayConvention paymentConvention = Following,
+                          const Date& issueDate = Date()) {
+            return new AmortizingFixedRateBondPtr(
+                new AmortizingFixedRateBond(settlementDays, notionals,
+                                  schedule, coupons, accrualDayCounter,
+                                  paymentConvention, issueDate));
+        }
+        AmortizingFixedRateBondPtr(
+                          Natural settlementDays,
+                          const Calendar& calendar,
+                          Real faceAmount,
+                          const Date& startDate,
+                          const Period& bondTenor,
+                          const Frequency& sinkingFrequency,
+                          const Rate coupon,
+                          const DayCounter& accrualDayCounter,
+                          BusinessDayConvention paymentConvention = Following,
+                          const Date& issueDate = Date()) {
+         return new AmortizingFixedRateBondPtr(
+          new AmortizingFixedRateBond(settlementDays, calendar,
+                      faceAmount, startDate, bondTenor, sinkingFrequency, 
+                      coupon, accrualDayCounter, paymentConvention, issueDate));
+        }
+        Frequency frequency() const {
+            return boost::dynamic_pointer_cast<AmortizingFixedRateBond>(*self)
+                ->frequency();
+        }
+        DayCounter dayCounter() const {
+            return boost::dynamic_pointer_cast<AmortizingFixedRateBond>(*self)
                 ->dayCounter();
         }
     }
